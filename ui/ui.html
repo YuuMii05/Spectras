@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Diagnostic</title>
+
+<!-- Police stylée -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+
+<style>
+
+/* RESET */
+html, body {
+    margin: 0;
+    height: 100%;
+    font-family: 'Montserrat', sans-serif;
+}
+
+/* FOND ROSE QUI MARCHE */
+body {
+    background: linear-gradient(135deg, #ff4d8d, #ff1f6b, #ff85b3);
+    color: white;
+}
+
+/* MENU */
+.menu {
+    display: flex;
+    justify-content: space-between;
+    padding: 25px 40px;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 900;
+}
+
+.links span {
+    margin-left: 25px;
+    cursor: pointer;
+    position: relative;
+}
+
+/* effet underline */
+.links span::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -5px;
+    width: 0%;
+    height: 2px;
+    background: white;
+    transition: 0.3s;
+}
+
+.links span:hover::after {
+    width: 100%;
+}
+
+/* CENTRE */
+.center {
+    height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* GROS TEXTE */
+.center h1 {
+    font-size: 5rem;
+    font-weight: 900;
+    margin: 0;
+    text-shadow: 0 15px 40px rgba(0,0,0,0.3);
+}
+
+/* TEXTE */
+.center p {
+    margin-top: 10px;
+    font-size: 1.2rem;
+}
+
+/* BOUTON */
+.center button {
+    margin-top: 30px;
+    padding: 15px 45px;
+    border: none;
+    border-radius: 50px;
+    background: white;
+    color: #ff1f6b;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.center button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- MENU -->
+<div class="menu">
+    <div class="logo">🎀 DIAG</div>
+    <div class="links">
+        <span>Accueil</span>
+        <span>Infos</span>
+        <span>Réparer</span>
+    </div>
+</div>
+
+<!-- CONTENU -->
+<div class="center">
+    <h1>SPECTRA</h1>
+    <p>Guide interactif 3D</p>
+    <button>Lancer</button>
+</div>
+
+</body>
+</html>
