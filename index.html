@@ -4,18 +4,92 @@
     <meta charset="utf-8">
     <title>Immatech - PS5 Pro Viewer</title>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <style>
+        /* Style des boutons en ROSE */
+        .ui-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .ui-button {
+            padding: 12px 20px;
+            background: rgba(255, 20, 147, 0.2); /* Rose transparent */
+            color: #ff69b4; /* Rose chaud */
+            border: 1px solid #ff1493;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: bold;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            backdrop-filter: blur(5px);
+        }
+
+        .ui-button:hover {
+            background: #ff1493;
+            color: #fff;
+            box-shadow: 0 0 15px #ff1493;
+            transform: scale(1.05);
+        }
+
+        /* Fenêtre d'information en ROSE */
+        #info-display {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(20, 0, 10, 0.9); /* Fond très sombre teinté rose */
+            color: #ff69b4; /* Texte rose */
+            padding: 20px;
+            border-radius: 10px;
+            font-family: sans-serif;
+            display: none;
+            border-left: 5px solid #ff1493;
+            border-top: 1px solid rgba(255, 20, 147, 0.3);
+            min-width: 250px;
+            box-shadow: 0 0 20px rgba(255, 20, 147, 0.4);
+            z-index: 100;
+        }
+
+        #info-display h3 { 
+            margin: 0 0 10px 0; 
+            color: #ff1493; 
+            text-shadow: 0 0 5px rgba(255, 20, 147, 0.5);
+        }
+        
+        #info-text {
+            color: #ffb6c1; /* Rose clair pour le texte de description */
+        }
+    </style>
 </head>
 <body style="margin: 0; overflow: hidden;">
 
-    <a-scene background="color: #d6d6d6" 
+    <div class="ui-container">
+        <button class="ui-button" onclick="showInfo('FICHE TECHNIQUE', 'Modèle : DualSense Pro\nBatterie : 1560 mAh\nÉtat : Connecté')"> Infos Manette</button>
+        <button class="ui-button" onclick="repairAction()"> Réparer</button>
+        <button class="ui-button" id="reset-btn"> Reset Vue</button>
+    </div>
+
+    <div id="info-display">
+        <h3 id="info-title">Titre</h3>
+        <p id="info-text" style="white-space: pre-line;"></p>
+    </div>
+
+    <a-scene background="color: #1a1a1a" 
              renderer="antialias: true; colorManagement: true; exposure: 1.2; toneMapping: ACESFilmic;"
              vr-mode-ui="enabled: false">
         
         <a-assets>
             <a-asset-item id="ps5" src="assets/ps5.glb"></a-asset-item>
+            <audio id="snd-click" src="assets/click.mp3"></audio>
+            <audio id="snd-repair" src="assets/repair.mp3"></audio>
         </a-assets>
 
-        <!-- Pas de cursor, pas de look-controls -->
         <a-camera position="0 0 1" fov="45" 
                   look-controls-enabled="false" 
                   wasd-controls-enabled="false">
@@ -34,34 +108,56 @@
 
     </a-scene>
 
-    <!-- Légende -->
     <div style="position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
-                background:rgba(0,0,0,0.45); color:#fff; font-family:sans-serif;
+                background:rgba(255, 20, 147, 0.2); color:#ff69b4; font-family:sans-serif;
                 font-size:13px; padding:8px 18px; border-radius:20px; pointer-events:none;
-                display:flex; gap:20px; white-space:nowrap;">
-        <span>🎮 Clic manette → Rotation</span>
-        <span>🖱️ Clic fond → Déplacer</span>
-        <span>⚙️ Molette → Zoom</span>
+                display:flex; gap:20px; white-space:nowrap; z-index: 10; border: 1px solid rgba(255, 20, 147, 0.3);">
+        <span> Clic manette → Rotation</span>
+        <span> Clic fond → Déplacer</span>
+        <span> Molette → Zoom</span>
     </div>
 
     <script>
-        // On attend que la scène soit prête
         const scene = document.querySelector('a-scene');
+        
         scene.addEventListener('loaded', () => {
-
             const controller = document.querySelector('#controller');
             const camera = document.querySelector('a-camera');
             const canvas = scene.canvas;
+            const sndClick = document.querySelector('#snd-click');
+            const sndRepair = document.querySelector('#snd-repair');
 
-            // --- Raycaster pour savoir si on clique sur la manette ---
+            window.showInfo = function(title, text) {
+                document.querySelector('#info-title').innerText = title;
+                document.querySelector('#info-text').innerText = text;
+                document.querySelector('#info-display').style.display = 'block';
+                
+                if(sndClick) sndClick.play();
+
+                setTimeout(() => {
+                    document.querySelector('#info-display').style.display = 'none';
+                }, 5000);
+            };
+
+            window.repairAction = function() {
+                showInfo('MAINTENANCE', 'Analyse du système...\nNettoyage des sticks terminé.\nÉtat : 100%');
+                if(sndRepair) sndRepair.play();
+            };
+
+            document.querySelector('#reset-btn').addEventListener('click', () => {
+                controller.object3D.rotation.set(0, 0, 0);
+                controller.object3D.position.set(0, 0, 0);
+                vX = 0; vY = 0;
+                showInfo('SYSTEME', 'Position réinitialisée');
+            });
+
+            // --- Raycaster ---
             const raycaster = new THREE.Raycaster();
             const mouse = new THREE.Vector2();
             let threeCamera = null;
 
             function getThreeCamera() {
-                if (!threeCamera) {
-                    threeCamera = camera.getObject3D('camera');
-                }
+                if (!threeCamera) threeCamera = camera.getObject3D('camera');
                 return threeCamera;
             }
 
@@ -74,17 +170,15 @@
                 return intersects.length > 0;
             }
 
-            // --- État ---
-            let mode = null; // 'rotate' | 'pan'
+            // --- Mouvements ---
+            let mode = null; 
             let lastX = 0, lastY = 0;
             let vX = 0, vY = 0;
             let animFrame = null;
 
-            // --- Inertie rotation ---
             function applyInertia() {
                 if (mode !== 'rotate') {
-                    vX *= 0.95;
-                    vY *= 0.95;
+                    vX *= 0.95; vY *= 0.95;
                     controller.object3D.rotation.y += vY;
                     controller.object3D.rotation.x += vX;
                     if (Math.abs(vX) > 0.0001 || Math.abs(vY) > 0.0001) {
@@ -93,10 +187,8 @@
                 }
             }
 
-            // --- Mouse ---
             canvas.addEventListener('mousedown', (e) => {
-                lastX = e.clientX;
-                lastY = e.clientY;
+                lastX = e.clientX; lastY = e.clientY;
                 if (isHittingController(e.clientX, e.clientY)) {
                     mode = 'rotate';
                     cancelAnimationFrame(animFrame);
@@ -107,9 +199,7 @@
             });
 
             document.addEventListener('mouseup', () => {
-                if (mode === 'rotate') {
-                    animFrame = requestAnimationFrame(applyInertia);
-                }
+                if (mode === 'rotate') animFrame = requestAnimationFrame(applyInertia);
                 mode = null;
             });
 
@@ -119,70 +209,22 @@
                 const dy = e.clientY - lastY;
 
                 if (mode === 'rotate') {
-                    vY = dx * 0.007;
-                    vX = dy * 0.007;
+                    vY = dx * 0.007; vX = dy * 0.007;
                     controller.object3D.rotation.y += vY;
                     controller.object3D.rotation.x += vX;
                 } else if (mode === 'pan') {
                     controller.object3D.position.x += dx * 0.003;
                     controller.object3D.position.y -= dy * 0.003;
                 }
-
-                lastX = e.clientX;
-                lastY = e.clientY;
+                lastX = e.clientX; lastY = e.clientY;
             });
 
-            // --- Molette zoom ---
             canvas.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 const pos = camera.object3D.position;
                 pos.z = Math.max(0.3, Math.min(4, pos.z + e.deltaY * 0.001));
             }, { passive: false });
-
-            // --- Touch ---
-            canvas.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                const t = e.touches[0];
-                lastX = t.clientX;
-                lastY = t.clientY;
-                if (isHittingController(t.clientX, t.clientY)) {
-                    mode = 'rotate';
-                    cancelAnimationFrame(animFrame);
-                    vX = 0; vY = 0;
-                } else {
-                    mode = 'pan';
-                }
-            }, { passive: false });
-
-            document.addEventListener('touchend', () => {
-                if (mode === 'rotate') {
-                    animFrame = requestAnimationFrame(applyInertia);
-                }
-                mode = null;
-            });
-
-            document.addEventListener('touchmove', (e) => {
-                if (!mode) return;
-                const t = e.touches[0];
-                const dx = t.clientX - lastX;
-                const dy = t.clientY - lastY;
-
-                if (mode === 'rotate') {
-                    vY = dx * 0.007;
-                    vX = dy * 0.007;
-                    controller.object3D.rotation.y += vY;
-                    controller.object3D.rotation.x += vX;
-                } else if (mode === 'pan') {
-                    controller.object3D.position.x += dx * 0.003;
-                    controller.object3D.position.y -= dy * 0.003;
-                }
-
-                lastX = t.clientX;
-                lastY = t.clientY;
-            });
-
         });
     </script>
-
 </body>
 </html>
