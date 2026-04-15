@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <title>SPECTRA — ImmaTech Diagnostic System</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pink: #ff1493;
+            --cyan: #00f2ff;
+            --dark: #030308;
+            --surface: rgba(5, 5, 20, 0.92);
+            --border-pink: rgba(255, 20, 147, 0.4);
+            --border-cyan: rgba(0, 242, 255, 0.35);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--dark);
+            font-family: 'Rajdhani', sans-serif;
+            color: #cce8ff;
+            overflow: hidden;
+        }
+
+        /* SCANLINE OVERLAY */
+        body::before {
+            content: "";
+            position: fixed; inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* ═══════════════════════════════
+           TOP NAV BAR
+        ═══════════════════════════════ */
+        #topbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 56px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            z-index: 2000;
+            backdrop-filter: blur(20px);
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .logo-mark {
+            width: 32px; height: 32px;
+            border: 2px solid var(--cyan);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Orbitron', monospace;
+            font-size: 11px;
+            font-weight: 900;
+            color: var(--cyan);
+            letter-spacing: 1px;
+            position: relative;
+        }
+
+        .logo-mark::before {
+            content: "";
+            position: absolute;
+            inset: 3px;
+            background: rgba(0,242,255,0.08);
+        }
+
+        .brand-name {
+            font-family: 'Orbitron', monospace;
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            color: #fff;
+        }
+
+        .brand-sub {
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: rgba(0,242,255,0.6);
+            margin-top: 2px;
+        }
+
+        .topbar-center {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: rgba(255,20,147,0.8);
+            font-family: 'Orbitron', monospace;
+        }
+
+        .live-dot {
+            width: 6px; height: 6px;
+            background: var(--pink);
+            border-radius: 50%;
+            animation: blink 1.2s infinite;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-link {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: rgba(0,242,255,0.6);
+            cursor: pointer;
+            transition: color 0.2s;
+            text-transform: uppercase;
+            font-family: 'Orbitron', monospace;
+            font-weight: 400;
+            padding: 4px 0;
+            border-bottom: 1px solid transparent;
+        }
+
+        .nav-link:hover {
+            color: var(--cyan);
+            border-color: var(--cyan);
+        }
+
+        .nav-link.active {
+            color: var(--cyan);
+            border-color: var(--cyan);
+        }
+
+        /* ═══════════════════════════════
+           BOTTOM BAR
+        ═══════════════════════════════ */
+        #bottombar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 48px;
+            background: var(--surface);
+            border-top: 1px solid var(--border-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            z-index: 2000;
+            backdrop-filter: blur(20px);
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            color: rgba(0,242,255,0.5);
+            font-family: 'Orbitron', monospace;
+        }
+
+        .status-bar-wrap {
+            width: 60px;
+            height: 3px;
+            background: rgba(0,242,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .status-bar-fill {
+            height: 100%;
+            background: var(--cyan);
+            animation: pulse-bar 2.5s infinite alternate;
+            border-radius: 2px;
+        }
+
+        .bottom-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* ═══════════════════════════════
+           ACTION BUTTONS (bottom left)
+        ═══════════════════════════════ */
+        #action-bar {
+            position: fixed;
+            bottom: 68px;
+            left: 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1500;
+        }
+
+        .hud-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.75);
+            border: 1px solid var(--border-cyan);
+            color: var(--cyan);
+            font-family: 'Orbitron', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+            clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+            text-transform: uppercase;
+            min-width: 160px;
+        }
+
+        .hud-btn:hover {
+            background: rgba(0,242,255,0.12);
+            border-color: var(--cyan);
+            color: #fff;
+            transform: translateX(4px);
+        }
+
+        .hud-btn:active {
+            transform: translateX(2px) scale(0.98);
+        }
+
+        .hud-btn.danger {
+            border-color: var(--border-pink);
+            color: var(--pink);
+        }
+
+        .hud-btn.danger:hover {
+            background: rgba(255,20,147,0.12);
+            border-color: var(--pink);
+        }
+
+        .btn-icon {
+            width: 16px; height: 16px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* ═══════════════════════════════
+           RIGHT PANEL — INFO DISPLAY
+        ═══════════════════════════════ */
+        #info-panel {
+            position: fixed;
+            top: 76px;
+            right: 24px;
+            width: 320px;
+            background: var(--surface);
+            border: 1px solid var(--border-pink);
+            backdrop-filter: blur(20px);
+            z-index: 1500;
+            display: none;
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+        }
+
+        .panel-header {
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid var(--border-pink);
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .panel-tag {
+            font-size: 9px;
+            letter-spacing: 2px;
+            color: rgba(255,20,147,0.6);
+            font-family: 'Orbitron', monospace;
+            margin-bottom: 6px;
+        }
+
+        .panel-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 14px;
+            font-weight: 900;
+            color: var(--pink);
+            letter-spacing: 2px;
+        }
+
+        .panel-close {
+            width: 28px; height: 28px;
+            border: 1px solid var(--border-pink);
+            background: transparent;
+            color: var(--pink);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .panel-close:hover {
+            background: rgba(255,20,147,0.15);
+        }
+
+        .scan-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--pink), transparent);
+            animation: scan-anim 1.2s ease-in-out;
+        }
+
+        @keyframes scan-anim {
+            from { transform: translateX(-100%); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+
+        .panel-body {
+            padding: 20px;
+        }
+
+        .panel-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 12px;
+        }
+
+        .metric-key {
+            color: rgba(0,242,255,0.5);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+
+        .metric-val {
+            color: #fff;
+            font-weight: 700;
+            font-family: 'Orbitron', monospace;
+            font-size: 11px;
+        }
+
+        .metric-val.warn { color: #ffaa00; }
+        .metric-val.ok { color: #00ff88; }
+        .metric-val.err { color: var(--pink); }
+
+        .panel-text {
+            font-size: 13px;
+            line-height: 1.7;
+            color: rgba(180,220,255,0.85);
+            margin-top: 14px;
+        }
+
+        .panel-action {
+            margin-top: 16px;
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ═══════════════════════════════
+           LEFT PANEL — SIDE STATS
+        ═══════════════════════════════ */
+        #side-panel {
+            position: fixed;
+            left: 24px;
+            top: 76px;
+            width: 140px;
+            z-index: 1500;
+        }
+
+        .side-module {
+            background: var(--surface);
+            border: 1px solid var(--border-cyan);
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+        }
+
+        .side-label {
+            font-family: 'Orbitron', monospace;
+            font-size: 8px;
+            letter-spacing: 2px;
+            color: rgba(0,242,255,0.5);
+            margin-bottom: 10px;
+        }
+
+        .side-bar-wrap {
+            height: 3px;
+            background: rgba(0,242,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 6px;
+        }
+
+        .side-bar-fill {
+            height: 100%;
+            background: var(--cyan);
+            border-radius: 2px;
+            animation: pulse-bar 2s infinite alternate;
+        }
+
+        .side-val {
+            font-family: 'Orbitron', monospace;
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--cyan);
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+
+        .side-unit {
+            font-size: 9px;
+            color: rgba(0,242,255,0.4);
+            letter-spacing: 1px;
+        }
+
+        /* ═══════════════════════════════
+           CORNER DECORATIONS
+        ═══════════════════════════════ */
+        .corner {
+            position: fixed;
+            width: 24px; height: 24px;
+            z-index: 1800;
+            pointer-events: none;
+        }
+
+        .corner-tl { top: 60px; left: 0; border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
+        .corner-tr { top: 60px; right: 0; border-top: 2px solid var(--cyan); border-right: 2px solid var(--cyan); }
+        .corner-bl { bottom: 52px; left: 0; border-bottom: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
+        .corner-br { bottom: 52px; right: 0; border-bottom: 2px solid var(--cyan); border-right: 2px solid var(--cyan); }
+
+        /* ═══════════════════════════════
+           CROSSHAIR CENTER
+        ═══════════════════════════════ */
+        #crosshair {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1200;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        .ch-h { width: 20px; height: 1px; background: var(--cyan); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .ch-v { width: 1px; height: 20px; background: var(--cyan); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .ch-ring { width: 40px; height: 40px; border: 1px solid rgba(0,242,255,0.5); border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+        /* ═══════════════════════════════
+           NOTIFICATION TOAST
+        ═══════════════════════════════ */
+        #toast {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: var(--surface);
+            border: 1px solid var(--border-cyan);
+            padding: 10px 24px;
+            font-family: 'Orbitron', monospace;
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: var(--cyan);
+            z-index: 3000;
+            opacity: 0;
+            transition: all 0.3s;
+            clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%);
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ═══════════════════════════════
+           ANIMATIONS
+        ═══════════════════════════════ */
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+        @keyframes pulse-bar { from { width: 15%; } to { width: 88%; } }
+
+        /* HOTSPOT PULSE */
+        @keyframes hotspot-ring {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP NAV -->
+    <div id="topbar">
+        <div class="topbar-left">
+            <div class="logo-mark">SP</div>
+            <div>
+                <div class="brand-name">SPECTRA</div>
+                <div class="brand-sub">IMMATECH · DIAGNOSTIC v2.4</div>
+            </div>
+        </div>
+        <div class="topbar-center">
+            <div class="live-dot"></div>
+            SESSION ACTIVE — PS5 PRO DETECTED
+        </div>
+        <div class="topbar-right">
+            <span class="nav-link active">Diagnostic</span>
+            <span class="nav-link" onclick="showToast('MODULE EN DÉVELOPPEMENT')">Historique</span>
+            <span class="nav-link" onclick="showToast('MODULE EN DÉVELOPPEMENT')">Paramètres</span>
+            <span class="nav-link" style="color:rgba(255,20,147,0.6)" onclick="window.location.href='ui/ui.html'">← Retour</span>
+        </div>
+    </div>
+
+    <!-- CORNER DECORATIONS -->
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+
+    <!-- CROSSHAIR -->
+    <div id="crosshair">
+        <div class="ch-h"></div>
+        <div class="ch-v"></div>
+        <div class="ch-ring"></div>
+    </div>
+
+    <!-- LEFT SIDE PANEL -->
+    <div id="side-panel">
+        <div class="side-module">
+            <div class="side-label">PWR CORE</div>
+            <div class="side-val">84<span style="font-size:10px">%</span></div>
+            <div class="side-unit">BATTERY</div>
+            <div class="side-bar-wrap"><div class="side-bar-fill" style="animation-delay:0s; width:84%"></div></div>
+        </div>
+        <div class="side-module">
+            <div class="side-label">SIGNAL BT</div>
+            <div class="side-val" id="signal-val">--</div>
+            <div class="side-unit">dBm · RSSI</div>
+            <div class="side-bar-wrap"><div class="side-bar-fill" style="animation-delay:0.4s"></div></div>
+        </div>
+        <div class="side-module">
+            <div class="side-label">CPU TEMP</div>
+            <div class="side-val">42°</div>
+            <div class="side-unit">CELSIUS</div>
+            <div class="side-bar-wrap"><div class="side-bar-fill" style="animation-delay:0.8s; width:42%"></div></div>
+        </div>
+        <div class="side-module" style="border-color: var(--border-pink);">
+            <div class="side-label" style="color:rgba(255,20,147,0.5)">ERRORS</div>
+            <div class="side-val" style="color:var(--pink)">03</div>
+            <div class="side-unit" style="color:rgba(255,20,147,0.4)">FAULTS FOUND</div>
+        </div>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div id="action-bar">
+        <button class="hud-btn" id="reset-btn">
+            <div class="btn-icon">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M7 1C3.69 1 1 3.69 1 7s2.69 6 6 6 6-2.69 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <path d="M11 1l2 2-2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            RE-CENTER
+        </button>
+        <button class="hud-btn" onclick="toggleRotate()">
+            <div class="btn-icon">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M7 2v5l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <span id="rotate-label">AUTO-ROTATE</span>
+        </button>
+        <button class="hud-btn danger" onclick="runFullScan()">
+            <div class="btn-icon">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <rect x="1" y="1" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M4 7h2l1-3 2 6 1-3h2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            FULL SCAN
+        </button>
+    </div>
+
+    <!-- INFO PANEL (right) -->
+    <div id="info-panel">
+        <div class="panel-header">
+            <div>
+                <div class="panel-tag">DIAGNOSTIC MODULE</div>
+                <div class="panel-title" id="info-title">SCANNING...</div>
+            </div>
+            <button class="panel-close" onclick="closePanel()">✕</button>
+        </div>
+        <div class="scan-line" id="scan-line"></div>
+        <div class="panel-body">
+            <div id="panel-metrics"></div>
+            <p class="panel-text" id="info-text"></p>
+            <div class="panel-action">
+                <button class="hud-btn" style="flex:1; justify-content:center; min-width:0; font-size:9px" onclick="closePanel()">
+                    DISMISS
+                </button>
+                <button class="hud-btn danger" style="flex:1; justify-content:center; min-width:0; font-size:9px" onclick="showToast('RAPPORT GÉNÉRÉ')">
+                    RAPPORT
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast">MESSAGE</div>
+
+    <!-- BOTTOM BAR -->
+    <div id="bottombar">
+        <div class="status-row">
+            <div class="status-item">
+                <div class="live-dot" style="background:var(--cyan)"></div>
+                A-FRAME 1.5.0
+            </div>
+            <div class="status-item">
+                <div class="status-bar-wrap"><div class="status-bar-fill" style="animation-delay:0.3s"></div></div>
+                RENDER ENGINE
+            </div>
+            <div class="status-item">
+                <div class="status-bar-wrap"><div class="status-bar-fill" style="animation-delay:0.7s"></div></div>
+                RAYCASTER
+            </div>
+        </div>
+        <div class="status-item" style="font-size:9px; letter-spacing:2px; color:rgba(0,242,255,0.3)">
+            IMMATECH © 2025 · SPECTRA DIAGNOSTIC SYSTEM · BUILD 2.4.1
+        </div>
+        <div class="bottom-right">
+            <div class="status-item">
+                <div class="live-dot"></div>
+                <span id="session-time">00:00:00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- A-FRAME SCENE -->
+    <a-scene background="color: #010108" renderer="antialias: true;" style="position:fixed; top:56px; left:0; right:0; bottom:48px;">
+
+        <a-assets>
+            <a-asset-item id="ps5" src="assets/ps5.glb"></a-asset-item>
+        </a-assets>
+
+        <a-camera position="0 0 1.25" look-controls-enabled="false" wasd-controls-enabled="false">
+            <a-cursor color="#00f2ff" fuse="false" scale="0.5" opacity="0.3"></a-cursor>
+        </a-camera>
+
+        <a-light type="ambient" intensity="0.3"></a-light>
+        <a-light type="point" position="3 5 4" intensity="2.5" color="#ff1493"></a-light>
+        <a-light type="point" position="-3 -3 4" intensity="2.5" color="#00f2ff"></a-light>
+        <a-light type="directional" position="0 5 0" intensity="0.8" color="#ffffff"></a-light>
+
+        <!-- Floating particles -->
+        <a-entity position="0 0 0">
+            <a-box position="0.6 0.3 -0.3" scale="0.008 0.008 0.008" color="#00f2ff">
+                <a-animation attribute="position" to="-0.6 -0.3 0.3" dur="6000" direction="alternate" repeat="indefinite" easing="easeInOutSine"></a-animation>
+            </a-box>
+            <a-box position="-0.5 0.4 0.2" scale="0.008 0.008 0.008" color="#ff1493">
+                <a-animation attribute="position" to="0.5 -0.4 -0.2" dur="8000" direction="alternate" repeat="indefinite" easing="easeInOutSine"></a-animation>
+            </a-box>
+            <a-box position="0.3 -0.5 0.1" scale="0.006 0.006 0.006" color="#00f2ff" opacity="0.6">
+                <a-animation attribute="position" to="-0.3 0.5 -0.1" dur="10000" direction="alternate" repeat="indefinite" easing="easeInOutSine"></a-animation>
+            </a-box>
+        </a-entity>
+
+        <!-- Orbital ring -->
+        <a-entity id="orbit-ring" rotation="-60 0 0">
+            <a-ring rotation="0 0 0" radius-inner="0.55" radius-outer="0.56" color="#00f2ff" opacity="0.15">
+                <a-animation attribute="rotation" from="0 0 0" to="0 360 0" dur="20000" repeat="indefinite" easing="linear"></a-animation>
+            </a-ring>
+        </a-entity>
+
+        <a-entity id="controller-group">
+
+            <!-- Controller model -->
+            <a-entity id="controller" gltf-model="#ps5" position="0 0 0" scale="8 8 8"
+                      animation="property: position; to: 0 0.04 0; dur: 2500; dir: alternate; loop: true; easing: easeInOutQuad">
+            </a-entity>
+
+            <!-- Pulse ring -->
+            <a-ring rotation="-90 0 0" radius-inner="0.42" radius-outer="0.43" color="#00f2ff" opacity="0.6">
+                <a-animation attribute="scale" from="0.5 0.5 0.5" to="1.8 1.8 1.8" dur="2800" repeat="indefinite" easing="easeOutQuad"></a-animation>
+                <a-animation attribute="opacity" from="0.6" to="0" dur="2800" repeat="indefinite" easing="easeOutQuad"></a-animation>
+            </a-ring>
+
+            <!-- HOTSPOTS -->
+            <a-sphere class="hotspot" data-id="joystick left"  position="-0 0.225 -0.21"    radius="0.028" color="#ff1493" material="emissive: #ff1493; emissiveIntensity: 6; opacity: 0.9"></a-sphere>
+            <a-sphere class="hotspot" data-id="buttons"        position="0.30 0.225 -0.135"  radius="0.028" color="#ff1493" material="emissive: #ff1493; emissiveIntensity: 6; opacity: 0.9"></a-sphere>
+            <a-sphere class="hotspot" data-id="touchpad"       position="0.11 0.19 -0.08"    radius="0.028" color="#ff1493" material="emissive: #ff1493; emissiveIntensity: 6; opacity: 0.9"></a-sphere>
+            <a-sphere class="hotspot" data-id="dpad"           position="-0.09 0.21 -0.13"   radius="0.028" color="#ff1493" material="emissive: #ff1493; emissiveIntensity: 6; opacity: 0.9"></a-sphere>
+            <a-sphere class="hotspot" data-id="joystick right" position="0.22 0.215 -0.21"   radius="0.028" color="#ff1493" material="emissive: #ff1493; emissiveIntensity: 6; opacity: 0.9"></a-sphere>
+            <a-sphere class="hotspot" data-id="L1"             position="0.32 0.14 -0.05"    radius="0.028" color="#ff1493" material="emissive: #ff1493; emissiveIntensity: 6; opacity: 0.9"></a-sphere>
+            <a-sphere class="hotspot" data-id="L2"             position="0.32 0.08 -0.05"    radius="0.028" color="#ff1493" material="emissive: #ff1493; emissiveIntensity: 6; opacity: 0.9"></a-sphere>
+            <a-sphere class="hotspot" data-id="R1"             position="-0.10 0.14 -0.05"   radius="0.028" color="#ff1493" material="emissive: #ff1493; emissiveIntensity: 6; opacity: 0.9"></a-sphere>
+            <a-sphere class="hotspot" data-id="R2"             position="-0.10 0.080 -0.05"  radius="0.028" color="#ff1493" material="emissive: #ff1493; emissiveIntensity: 6; opacity: 0.9"></a-sphere>
+            <a-sphere class="hotspot" data-id="boutonps"       position="0.10 0.190 -0.220"  radius="0.028" color="#00f2ff" material="emissive: #00f2ff; emissiveIntensity: 10; opacity: 0.9"></a-sphere>
+
+        </a-entity>
+    </a-scene>
+
+    <script>
+        const repairGuides = {
+            'joystick left': {
+                title: 'MODULE L-3D',
+                status: 'FAULT',
+                metrics: [
+                    { key: 'Résistance axe X', val: '2.1 kΩ', cls: 'err' },
+                    { key: 'Résistance axe Y', val: '4.7 kΩ', cls: 'ok' },
+                    { key: 'Dead zone', val: '18%', cls: 'warn' },
+                    { key: 'Firmware', val: 'v3.12', cls: '' },
+                ],
+                text: 'Défaut de résistance détecté sur l\'axe X. Nettoyage à l\'isopropanol 99% requis. Vérifier le potentiomètre Hall effect avant réassemblage.'
+            },
+            'buttons': {
+                title: 'ACTION KEYS',
+                status: 'WARN',
+                metrics: [
+                    { key: 'Croix ×', val: 'OK', cls: 'ok' },
+                    { key: 'Rond ○', val: 'DEBRIS', cls: 'warn' },
+                    { key: 'Triangle △', val: 'OK', cls: 'ok' },
+                    { key: 'Carré □', val: 'OK', cls: 'ok' },
+                ],
+                text: 'Accumulation de débris sous la membrane silicone du bouton Rond. Nettoyage physique à l\'air sec recommandé. Aucun remplacement matériel nécessaire.'
+            },
+            'touchpad': {
+                title: 'TPAD SENSOR',
+                status: 'CRITICAL',
+                metrics: [
+                    { key: 'Réponse tactile', val: '12%', cls: 'err' },
+                    { key: 'Nappe ZIF', val: 'DÉFAUT', cls: 'err' },
+                    { key: 'Clic physique', val: 'OK', cls: 'ok' },
+                    { key: 'Résolution', val: '0 dpi', cls: 'err' },
+                ],
+                text: 'Capacité de réponse critique : 12%. Nappe flexible ZIF endommagée ou déconnectée. Remplacement de la nappe requis — pièce réf. PS5-ZIF-003.'
+            },
+            'dpad': {
+                title: 'DIRECTIONAL PAD',
+                status: 'WARN',
+                metrics: [
+                    { key: 'Dôme conducteur', val: 'USURE', cls: 'warn' },
+                    { key: 'Actuation force', val: '0.3 N', cls: 'warn' },
+                    { key: 'Contact haut/bas', val: 'OK', cls: 'ok' },
+                    { key: 'Contact G/D', val: 'INTERMITT.', cls: 'warn' },
+                ],
+                text: 'Usure progressive du dôme conducteur gauche/droite. Remplacement recommandé pour éviter les inputs fantômes. Pièce réf. PS5-DPAD-DOME-02.'
+            },
+            'joystick right': {
+                title: 'MODULE R-3D',
+                status: 'OK',
+                metrics: [
+                    { key: 'Potentiomètre', val: 'STABLE', cls: 'ok' },
+                    { key: 'Résistance axe X', val: '4.7 kΩ', cls: 'ok' },
+                    { key: 'Résistance axe Y', val: '4.7 kΩ', cls: 'ok' },
+                    { key: 'Lubrification', val: 'FAIBLE', cls: 'warn' },
+                ],
+                text: 'Potentiomètre stable, aucune dérive détectée. Lubrification de l\'axe recommandée pour maintenir la fluidité mécanique. Utiliser graisse silicone.'
+            },
+            'L1': {
+                title: 'SHOULDER L1',
+                status: 'WARN',
+                metrics: [
+                    { key: 'Micro-switch', val: 'ENCRASSÉ', cls: 'warn' },
+                    { key: 'Temps réponse', val: '18 ms', cls: 'warn' },
+                    { key: 'Durée de vie', val: '60%', cls: 'ok' },
+                    { key: 'Contact électrique', val: 'OK', cls: 'ok' },
+                ],
+                text: 'Micro-switch encrassé causant un léger délai d\'actuation. Soufflage air sec comprimé préconisé. Aucun remplacement nécessaire à ce stade.'
+            },
+            'L2': {
+                title: 'TRIGGER L2',
+                status: 'FAULT',
+                metrics: [
+                    { key: 'Tension ressort', val: '0.2 N', cls: 'err' },
+                    { key: 'Standard requis', val: '0.5 N', cls: '' },
+                    { key: 'Capteur analogique', val: 'OK', cls: 'ok' },
+                    { key: 'Haptique', val: 'OK', cls: 'ok' },
+                ],
+                text: 'Ressort de tension fatigué : tension mesurée à 0.2N contre 0.5N standard. Le trigger manque de résistance. Remplacement du ressort requis — réf. PS5-L2-SPRING.'
+            },
+            'R1': {
+                title: 'SHOULDER R1',
+                status: 'OK',
+                metrics: [
+                    { key: 'État général', val: 'NOMINAL', cls: 'ok' },
+                    { key: 'Temps réponse', val: '4 ms', cls: 'ok' },
+                    { key: 'Durée de vie', val: '92%', cls: 'ok' },
+                    { key: 'Contact électrique', val: 'OK', cls: 'ok' },
+                ],
+                text: 'Fonctionnement nominal sur tous les paramètres. Aucun défaut détecté. Prochain contrôle recommandé dans 6 mois ou après 200h d\'utilisation.'
+            },
+            'R2': {
+                title: 'TRIGGER R2',
+                status: 'WARN',
+                metrics: [
+                    { key: 'Moteur haptique', val: 'DÉSALIGNÉ', cls: 'warn' },
+                    { key: 'Vibration RMS', val: '0.4 g', cls: 'warn' },
+                    { key: 'Standard', val: '1.2 g', cls: '' },
+                    { key: 'Capteur analogique', val: 'OK', cls: 'ok' },
+                ],
+                text: 'Moteur haptique désaligné, réduisant l\'intensité de retour de force. Calibrage logiciel requis via le mode service. Si persistant : réalignement mécanique.'
+            },
+            'boutonps': {
+                title: 'SYSTEM CORE',
+                status: 'OK',
+                metrics: [
+                    { key: 'Bouton PS', val: 'OPÉRATIONNEL', cls: 'ok' },
+                    { key: 'Réponse', val: '2 ms', cls: 'ok' },
+                    { key: 'Firmware MCU', val: 'v5.02', cls: 'ok' },
+                    { key: 'Boot séquence', val: 'NORMAL', cls: 'ok' },
+                ],
+                text: 'Bouton maître opérationnel. En cas de non-réponse : réinitialisation matérielle via le petit port situé à l\'arrière du boîtier (maintenir 5 secondes).'
+            }
+        };
+
+        const statusColors = { 'OK': '#00ff88', 'WARN': '#ffaa00', 'FAULT': '#ff1493', 'CRITICAL': '#ff1493' };
+
+        function showPanel(id) {
+            const guide = repairGuides[id];
+            if (!guide) return;
+
+            document.getElementById('info-title').innerText = guide.title;
+            document.getElementById('info-title').style.color = statusColors[guide.status] || '#ff1493';
+            document.getElementById('info-text').innerText = guide.text;
+
+            let metricsHTML = '';
+            guide.metrics.forEach(m => {
+                metricsHTML += `<div class="panel-metric">
+                    <span class="metric-key">${m.key}</span>
+                    <span class="metric-val ${m.cls}">${m.val}</span>
+                </div>`;
+            });
+            document.getElementById('panel-metrics').innerHTML = metricsHTML;
+
+            const panel = document.getElementById('info-panel');
+            panel.style.display = 'block';
+
+            const line = document.getElementById('scan-line');
+            line.style.animation = 'none';
+            void line.offsetWidth;
+            line.style.animation = 'scan-anim 1.2s ease-in-out';
+        }
+
+        function closePanel() {
+            document.getElementById('info-panel').style.display = 'none';
+        }
+
+        let autoRotate = false;
+        let autoRotateId = null;
+
+        function toggleRotate() {
+            autoRotate = !autoRotate;
+            document.getElementById('rotate-label').innerText = autoRotate ? 'STOP ROTATE' : 'AUTO-ROTATE';
+            if (!autoRotate && autoRotateId) {
+                clearInterval(autoRotateId);
+                autoRotateId = null;
+            }
+        }
+
+        let toastTimeout = null;
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.add('show');
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        function runFullScan() {
+            showToast('ANALYSE COMPLÈTE EN COURS...');
+            const panel = document.getElementById('info-panel');
+            panel.style.display = 'none';
+            let i = 0;
+            const keys = Object.keys(repairGuides);
+            const interval = setInterval(() => {
+                if (i >= keys.length) { clearInterval(interval); showToast('SCAN TERMINÉ — 3 FAULTS DÉTECTÉS'); return; }
+                showToast('SCAN: ' + repairGuides[keys[i]].title);
+                i++;
+            }, 600);
+        }
+
+        // Session timer
+        let seconds = 0;
+        setInterval(() => {
+            seconds++;
+            const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+            const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+            const s = String(seconds % 60).padStart(2, '0');
+            document.getElementById('session-time').innerText = `${h}:${m}:${s}`;
+        }, 1000);
+
+        // Signal value animation
+        setInterval(() => {
+            const v = -40 - Math.floor(Math.random() * 20);
+            document.getElementById('signal-val').innerText = v;
+        }, 1800);
+
+        // Scene interaction
+        const scene = document.querySelector('a-scene');
+        scene.addEventListener('loaded', () => {
+            const controllerGroup = document.querySelector('#controller-group');
+            const camera = document.querySelector('a-camera');
+            const canvas = scene.canvas;
+
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+
+            canvas.addEventListener('mousedown', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera.getObject3D('camera'));
+                const hotspots = document.querySelectorAll('.hotspot');
+                const objects = Array.from(hotspots).map(h => h.object3D);
+                const intersects = raycaster.intersectObjects(objects, true);
+
+                if (intersects.length > 0) {
+                    const id = intersects[0].object.el.getAttribute('data-id');
+                    showPanel(id);
+                    mode = null;
+                } else {
+                    lastX = e.clientX; lastY = e.clientY;
+                    mode = 'rotate';
+                    document.getElementById('info-panel').style.display = 'none';
+                }
+            });
+
+            let mode = null, lastX = 0, lastY = 0;
+            document.addEventListener('mouseup', () => { mode = null; });
+            document.addEventListener('mousemove', (e) => {
+                if (mode === 'rotate') {
+                    controllerGroup.object3D.rotation.y += (e.clientX - lastX) * 0.007;
+                    controllerGroup.object3D.rotation.x += (e.clientY - lastY) * 0.007;
+                    lastX = e.clientX; lastY = e.clientY;
+                }
+                if (autoRotate) {
+                    controllerGroup.object3D.rotation.y += 0.003;
+                }
+            });
+
+            // Auto rotate loop
+            setInterval(() => {
+                if (autoRotate) {
+                    controllerGroup.object3D.rotation.y += 0.008;
+                }
+            }, 16);
+
+            document.querySelector('#reset-btn').addEventListener('click', () => {
+                controllerGroup.object3D.rotation.set(0, 0, 0);
+                showToast('ORIENTATION RÉINITIALISÉE');
+            });
+        });
+    </script>
+</body>
+</html>

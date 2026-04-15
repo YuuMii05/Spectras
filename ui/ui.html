@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>SPECTRA - Diagnostic</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+
+<style>
+
+html, body {
+    margin: 0;
+    height: 100%;
+    font-family: 'Montserrat', sans-serif;
+    overflow: hidden;
+}
+
+body {
+    background: linear-gradient(135deg, #ff4d8d, #ff1f6b, #ff85b3);
+    color: white;
+}
+
+.menu {
+    display: flex;
+    justify-content: space-between;
+    padding: 25px 40px;
+    position: relative;
+    z-index: 100;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 900;
+}
+
+.links span {
+    margin-left: 25px;
+    cursor: pointer;
+    position: relative;
+}
+
+.links span::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -5px;
+    width: 0%;
+    height: 2px;
+    background: white;
+    transition: 0.3s;
+}
+
+.links span:hover::after {
+    width: 100%;
+}
+
+.page {
+    height: calc(100vh - 80px);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+.active {
+    display: flex;
+}
+
+h1 {
+    font-size: 5rem;
+    font-weight: 900;
+    margin: 0;
+    text-shadow: 0 15px 40px rgba(0,0,0,0.3);
+}
+
+p {
+    margin-top: 10px;
+    font-size: 1.2rem;
+    max-width: 600px;
+}
+
+button {
+    margin-top: 30px;
+    padding: 15px 45px;
+    border: none;
+    border-radius: 50px;
+    background: white;
+    color: #ff1f6b;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="menu">
+    <div class="logo">🎀 SPECTRA</div>
+    <div class="links">
+        <span onclick="showPage('accueil')">Accueil</span>
+        <span onclick="showPage('infos')">Infos</span>
+    </div>
+</div>
+
+<div id="accueil" class="page active">
+    <h1>SPECTRA</h1>
+    <p>Guide interactif 3D</p>
+    <button onclick="showPage('infos')">Infos</button>
+</div>
+
+<div id="infos" class="page">
+    <h1>INFOS</h1>
+    <div style="margin-top: 20px; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 20px;">
+        <p>
+            <br><i>Nous avons conçu Spectra, une interface de contrôle immersive développée spécifiquement pour répondre aux besoins d'ImmaTech.</i><br>
+            <br>L'objectif de Spectra est de transformer la manette en un outil d'assistance intelligent. Elle permet au technicien d'interagir avec son environnement en temps réel, facilitant ainsi le diagnostic et la réparation de systèmes complexes grâce à une navigation fluide et intuitive en réalité augmentée.<br>
+        </p>
+    </div>
+    <button onclick="window.location.href='../index.html'">Lancer</button>
+</div>
+
+<script>
+    function showPage(pageId) {
+        const pages = document.querySelectorAll('.page');
+        pages.forEach(page => {
+            page.classList.remove('active');
+        });
+        document.getElementById(pageId).classList.add('active');
+    }
+</script>
+
+</body>
+</html>
