@@ -2,10 +2,10 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Immatech - PS5 Pro Viewer</title>
+    <title>Immatech - PS5 Pro Repair Guide</title>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <style>
-        /* Style des boutons en ROSE */
+        /* Interface Style Rose */
         .ui-container {
             position: fixed;
             top: 20px;
@@ -15,215 +15,184 @@
             gap: 12px;
             z-index: 100;
         }
-
+ 
         .ui-button {
             padding: 12px 20px;
-            background: rgba(255, 20, 147, 0.2); /* Rose transparent */
-            color: #ff69b4; /* Rose chaud */
+            background: rgba(255, 20, 147, 0.2);
+            color: #ff69b4;
             border: 1px solid #ff1493;
             border-radius: 8px;
             cursor: pointer;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: sans-serif;
             font-weight: bold;
             transition: all 0.2s;
             text-transform: uppercase;
-            letter-spacing: 1px;
             backdrop-filter: blur(5px);
         }
-
+ 
         .ui-button:hover {
             background: #ff1493;
             color: #fff;
             box-shadow: 0 0 15px #ff1493;
-            transform: scale(1.05);
         }
-
-        /* Fenêtre d'information en ROSE */
+ 
         #info-display {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: rgba(20, 0, 10, 0.9); /* Fond très sombre teinté rose */
-            color: #ff69b4; /* Texte rose */
+            background: rgba(20, 0, 10, 0.95);
+            color: #ff69b4;
             padding: 20px;
             border-radius: 10px;
             font-family: sans-serif;
             display: none;
             border-left: 5px solid #ff1493;
-            border-top: 1px solid rgba(255, 20, 147, 0.3);
-            min-width: 250px;
+            min-width: 280px;
+            max-width: 350px;
             box-shadow: 0 0 20px rgba(255, 20, 147, 0.4);
             z-index: 100;
         }
-
-        #info-display h3 { 
-            margin: 0 0 10px 0; 
-            color: #ff1493; 
-            text-shadow: 0 0 5px rgba(255, 20, 147, 0.5);
-        }
-        
-        #info-text {
-            color: #ffb6c1; /* Rose clair pour le texte de description */
+ 
+        #info-display h3 { margin: 0 0 10px 0; color: #ff1493; text-transform: uppercase; }
+        #info-text { color: #ffb6c1; line-height: 1.5; white-space: pre-line; }
+       
+        .close-btn {
+            background: none;
+            border: 1px solid #ff1493;
+            color: #ff1493;
+            cursor: pointer;
+            margin-top: 15px;
+            padding: 8px;
+            width: 100%;
+            border-radius: 5px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body style="margin: 0; overflow: hidden;">
-
+ 
     <div class="ui-container">
-        <button class="ui-button" onclick="showInfo('FICHE TECHNIQUE', 'Modèle : DualSense Pro\nBatterie : 1560 mAh\nÉtat : Connecté')">🔍 Infos Manette</button>
-        <button class="ui-button" onclick="repairAction()">🛠️ Réparer</button>
+        <button class="ui-button" onclick="showInstructions('AIDE', 'Cliquez sur les points roses pour voir les étapes de réparation.')">❓ Aide</button>
         <button class="ui-button" id="reset-btn">🔄 Reset Vue</button>
     </div>
-
+ 
     <div id="info-display">
-        <h3 id="info-title">Titre</h3>
-        <p id="info-text" style="white-space: pre-line;"></p>
+        <h3 id="info-title">Analyse...</h3>
+        <p id="info-text"></p>
+        <button class="close-btn" onclick="document.querySelector('#info-display').style.display='none'">FERMER</button>
     </div>
-
-    <a-scene background="color: #1a1a1a" 
-             renderer="antialias: true; colorManagement: true; exposure: 1.2; toneMapping: ACESFilmic;"
-             vr-mode-ui="enabled: false">
-        
+ 
+    <a-scene background="color: #121212" renderer="antialias: true; colorManagement: true;" vr-mode-ui="enabled: false">
+       
         <a-assets>
             <a-asset-item id="ps5" src="assets/ps5.glb"></a-asset-item>
             <audio id="snd-click" src="assets/click.mp3"></audio>
-            <audio id="snd-repair" src="assets/repair.mp3"></audio>
         </a-assets>
-
-        <a-camera position="0 0 1" fov="45" 
-                  look-controls-enabled="false" 
-                  wasd-controls-enabled="false">
-        </a-camera>
-
-        <a-light type="ambient" intensity="0.7"></a-light>
-        <a-light type="directional" position="1 3 2" intensity="1" color="#ffffff"></a-light>
-        <a-light type="directional" position="-1 -1 -2" intensity="0.5" color="#ffffff"></a-light>
-
-        <a-entity
-          id="controller"
-          gltf-model="#ps5"
-          position="0 0 0"
-          scale="8 8 8">
+ 
+        <a-camera position="0 0 1.2" fov="45" look-controls-enabled="false" wasd-controls-enabled="false"></a-camera>
+ 
+        <a-light type="ambient" intensity="0.8"></a-light>
+        <a-light type="directional" position="1 3 2" intensity="1"></a-light>
+ 
+        <a-entity id="controller-group">
+            <a-entity id="controller" gltf-model="#ps5" position="0 0 0" scale="8 8 8"></a-entity>
+ 
+            <a-sphere class="hotspot" data-id="joystick"
+                      position="-0 0.22.5 -0.21" radius="0.03"
+                      color="#ff1493" material="emissive: #ff1493 ;">
+            </a-sphere>
+           
+            <a-sphere class="hotspot" data-id="buttons"
+                      position="0.30 0.22.5 -0.13.5" radius="0.03"
+                      color="#ff1493" material="emissive: #ff1493; emissiveIntensity: 2">
+            </a-sphere>
+ 
+            <a-sphere class="hotspot" data-id="touchpad"
+                      position="0.11 0.18 -0.08" radius="0.03"
+                      color="#ff1493" material="emissive: #ff1493; emissiveIntensity: 2">
+            </a-sphere>
         </a-entity>
-
+ 
     </a-scene>
-
-    <div style="position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
-                background:rgba(255, 20, 147, 0.2); color:#ff69b4; font-family:sans-serif;
-                font-size:13px; padding:8px 18px; border-radius:20px; pointer-events:none;
-                display:flex; gap:20px; white-space:nowrap; z-index: 10; border: 1px solid rgba(255, 20, 147, 0.3);">
-        <span>🎮 Clic manette → Rotation</span>
-        <span>🖱️ Clic fond → Déplacer</span>
-        <span>⚙️ Molette → Zoom</span>
-    </div>
-
+ 
     <script>
         const scene = document.querySelector('a-scene');
-        
+       
         scene.addEventListener('loaded', () => {
-            const controller = document.querySelector('#controller');
+            const controllerGroup = document.querySelector('#controller-group');
             const camera = document.querySelector('a-camera');
             const canvas = scene.canvas;
             const sndClick = document.querySelector('#snd-click');
-            const sndRepair = document.querySelector('#snd-repair');
-
-            window.showInfo = function(title, text) {
+ 
+            const repairGuides = {
+                'joystick': {
+                    title: 'Réparer le Drift',
+                    text: '• Symptôme : Mouvement fantôme.\n• Solution : Nettoyer le mécanisme au nettoyant contact ou remplacer le potentiomètre.'
+                },
+                'buttons': {
+                    title: 'Boutons Bloqués',
+                    text: '• Symptôme : Boutons qui collent.\n• Solution : Ouvrir et nettoyer la membrane silicone avec de l\'alcool.'
+                },
+                'touchpad': {
+                    title: 'Pavé Tactile',
+                    text: '• Symptôme : Pas de clic.\n• Solution : Rebrancher la nappe flexible interne au centre de la manette.'
+                }
+            };
+ 
+            window.showInstructions = function(title, text) {
                 document.querySelector('#info-title').innerText = title;
                 document.querySelector('#info-text').innerText = text;
                 document.querySelector('#info-display').style.display = 'block';
-                
-                if(sndClick) sndClick.play();
-
-                setTimeout(() => {
-                    document.querySelector('#info-display').style.display = 'none';
-                }, 5000);
+                if(sndClick) {
+                    sndClick.currentTime = 0;
+                    sndClick.play();
+                }
             };
-
-            window.repairAction = function() {
-                showInfo('MAINTENANCE', 'Analyse du système...\nNettoyage des sticks terminé.\nÉtat : 100%');
-                if(sndRepair) sndRepair.play();
-            };
-
-            document.querySelector('#reset-btn').addEventListener('click', () => {
-                controller.object3D.rotation.set(0, 0, 0);
-                controller.object3D.position.set(0, 0, 0);
-                vX = 0; vY = 0;
-                showInfo('SYSTEME', 'Position réinitialisée');
-            });
-
-            // --- Raycaster ---
+ 
             const raycaster = new THREE.Raycaster();
             const mouse = new THREE.Vector2();
-            let threeCamera = null;
-
-            function getThreeCamera() {
-                if (!threeCamera) threeCamera = camera.getObject3D('camera');
-                return threeCamera;
-            }
-
-            function isHittingController(clientX, clientY) {
-                const rect = canvas.getBoundingClientRect();
-                mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
-                mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
-                raycaster.setFromCamera(mouse, getThreeCamera());
-                const intersects = raycaster.intersectObject(controller.object3D, true);
-                return intersects.length > 0;
-            }
-
-            // --- Mouvements ---
-            let mode = null; 
-            let lastX = 0, lastY = 0;
-            let vX = 0, vY = 0;
-            let animFrame = null;
-
-            function applyInertia() {
-                if (mode !== 'rotate') {
-                    vX *= 0.95; vY *= 0.95;
-                    controller.object3D.rotation.y += vY;
-                    controller.object3D.rotation.x += vX;
-                    if (Math.abs(vX) > 0.0001 || Math.abs(vY) > 0.0001) {
-                        animFrame = requestAnimationFrame(applyInertia);
-                    }
-                }
-            }
-
+ 
             canvas.addEventListener('mousedown', (e) => {
-                lastX = e.clientX; lastY = e.clientY;
-                if (isHittingController(e.clientX, e.clientY)) {
-                    mode = 'rotate';
-                    cancelAnimationFrame(animFrame);
-                    vX = 0; vY = 0;
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+               
+                raycaster.setFromCamera(mouse, camera.getObject3D('camera'));
+                const hotspots = document.querySelectorAll('.hotspot');
+                const objects = Array.from(hotspots).map(h => h.object3D);
+                const intersects = raycaster.intersectObjects(objects, true);
+ 
+                if (intersects.length > 0) {
+                    const id = intersects[0].object.el.getAttribute('data-id');
+                    const guide = repairGuides[id];
+                    showInstructions(guide.title, guide.text);
+                    mode = null;
                 } else {
-                    mode = 'pan';
+                    lastX = e.clientX; lastY = e.clientY;
+                    mode = 'rotate';
                 }
             });
-
-            document.addEventListener('mouseup', () => {
-                if (mode === 'rotate') animFrame = requestAnimationFrame(applyInertia);
-                mode = null;
-            });
-
+ 
+            let mode = null; let lastX = 0, lastY = 0;
+            document.addEventListener('mouseup', () => { mode = null; });
             document.addEventListener('mousemove', (e) => {
-                if (!mode) return;
+                if (mode !== 'rotate') return;
                 const dx = e.clientX - lastX;
                 const dy = e.clientY - lastY;
-
-                if (mode === 'rotate') {
-                    vY = dx * 0.007; vX = dy * 0.007;
-                    controller.object3D.rotation.y += vY;
-                    controller.object3D.rotation.x += vX;
-                } else if (mode === 'pan') {
-                    controller.object3D.position.x += dx * 0.003;
-                    controller.object3D.position.y -= dy * 0.003;
-                }
+                controllerGroup.object3D.rotation.y += dx * 0.007;
+                controllerGroup.object3D.rotation.x += dy * 0.007;
                 lastX = e.clientX; lastY = e.clientY;
             });
-
+ 
             canvas.addEventListener('wheel', (e) => {
-                e.preventDefault();
                 const pos = camera.object3D.position;
-                pos.z = Math.max(0.3, Math.min(4, pos.z + e.deltaY * 0.001));
+                pos.z = Math.max(0.4, Math.min(3, pos.z + e.deltaY * 0.001));
             }, { passive: false });
+ 
+            document.querySelector('#reset-btn').addEventListener('click', () => {
+                controllerGroup.object3D.rotation.set(0, 0, 0);
+                document.querySelector('#info-display').style.display = 'none';
+            });
         });
     </script>
 </body>
