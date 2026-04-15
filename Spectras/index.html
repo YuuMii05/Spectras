@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>PS5 Viewer</title>
+
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="js/gameplay.js"></script>
+
+  <style>
+    body { margin: 0; overflow: hidden; }
+  </style>
+</head>
+
+<body>
+
+<a-scene background="color: #d6d6d6">
+
+  <a-assets>
+    <a-asset-item id="ps5" src="assets/ps5.glb"></a-asset-item>
+  </a-assets>
+
+  <!-- CAMERA -->
+  <a-camera id="mainCamera" position="0 0 3"></a-camera>
+
+  <!-- LIGHTS -->
+  <a-light type="ambient" intensity="0.8"></a-light>
+  <a-light type="directional" position="1 3 2" intensity="1"></a-light>
+
+  <!-- MODEL -->
+  <a-entity
+    id="controllerModel"
+    gltf-model="#ps5"
+    position="0 0 0"
+    scale="8 8 8"
+    model-rotate
+  ></a-entity>
+
+</a-scene>
+
+</body>
+</html>
