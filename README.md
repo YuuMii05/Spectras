@@ -133,9 +133,15 @@ Cette page détaille la mission de l'interface de contrôle développée pour *I
 <img width="1899" height="901" alt="Infos - page" src="https://github.com/user-attachments/assets/616fa917-fb6c-4ea1-a7a8-3f70dd4386d7" />
 
 3. **Interface Interactive & Diagnostic 3D**  
-ette interface constitue le cœur fonctionnel de Spectra, où la manette est modélisée en 3D pour une manipulation libre et immersive. L'utilisateur effectue un diagnostic visuel grâce à des indicateurs signalant les zones défectueuses, déclenchant l'affichage en temps réel d'un panneau latéral dynamique qui fournit des instructions de réparation précises, comme le nettoyage des membranes ou des composants internes. Des commandes intuitives telles que « Reset Vue » et « Aide » assurent une navigation fluide, transformant ainsi le dépannage technique en une procédure visuelle simplifiée et accessible en réalité étendue.
-<img width="2558" height="1241" alt="image (1)" src="https://github.com/user-attachments/assets/2360809d-054f-45c3-bb63-db2ca957e648" />
+Cette interface est le cœur fonctionnel de Spectra. Elle permet une inspection immersive en temps réel d'un contrôleur modélisé en 3D (ici une PS5 Pro), transformant la maintenance technique en une expérience visuelle simplifiée.
+<img width="1918" height="917" alt="1" src="https://github.com/user-attachments/assets/ce3a1204-a9da-4304-ae94-54e85eb4a455" />
+<img width="1918" height="922" alt="2" src="https://github.com/user-attachments/assets/3e3037de-d4a4-4ce8-9c4d-5f58a2727022" />  
 
+Caractéristiques principales :
+* Télémétrie en temps réel : Monitoring instantané de la batterie, de la force du signal BT et de la température interne.
+* Diagnostic Ciblé : Identification précise des pannes (ex: accumulation de débris sous une membrane) via un panneau latéral dynamique.
+* Navigation Intuitive : Contrôles de caméra fluides (Re-center, Auto-rotate) et fonction Full Scan pour une analyse exhaustive du matériel.
+* Assistance Contextuelle : Recommandations de réparation précises basées sur l'état des composants, optimisées pour une utilisation en réalité étendue (XR).
 
 **Conclusion**  
 Ce projet nous a permis de développer une application immersive combinant réalité augmentée, interaction 3D et logique applicative, tout en respectant une architecture modulaire.
